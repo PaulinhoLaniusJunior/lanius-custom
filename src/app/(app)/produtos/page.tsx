@@ -89,7 +89,7 @@ export default async function ListaProdutos(props: PageProps<"/produtos">) {
       </div>
 
       <Cartao>
-        <form className="flex flex-wrap items-center gap-3 border-b border-borda p-3">
+        <form className="flex flex-col gap-3 border-b border-borda p-3 sm:flex-row sm:items-center">
           <div className="relative min-w-0 flex-1">
             <Search
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-texto-fraco"
@@ -103,22 +103,24 @@ export default async function ListaProdutos(props: PageProps<"/produtos">) {
               aria-label="Buscar produto"
             />
           </div>
-          <label className="flex items-center gap-2 text-sm text-texto-suave">
-            <input
-              type="checkbox"
-              name="inativos"
-              value="1"
-              defaultChecked={mostrarInativos}
-              className="size-4 accent-marca"
-            />
-            Mostrar inativos
-          </label>
-          <button
-            type="submit"
-            className="min-h-11 rounded-lg border border-borda-forte px-4 text-sm font-medium text-texto-suave hover:border-prata/50 hover:text-texto"
-          >
-            Filtrar
-          </button>
+          <div className="flex items-center justify-between gap-3 sm:justify-start">
+            <label className="flex items-center gap-2 text-sm whitespace-nowrap text-texto-suave">
+              <input
+                type="checkbox"
+                name="inativos"
+                value="1"
+                defaultChecked={mostrarInativos}
+                className="size-4 accent-marca"
+              />
+              Mostrar inativos
+            </label>
+            <button
+              type="submit"
+              className="min-h-11 rounded-lg border border-borda-forte px-4 text-sm font-medium text-texto-suave hover:border-prata/50 hover:text-texto"
+            >
+              Filtrar
+            </button>
+          </div>
         </form>
 
         {produtos.length === 0 ? (
