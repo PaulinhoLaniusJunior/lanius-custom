@@ -79,59 +79,109 @@ export function TabelaPrecos({
       {visiveis.length === 0 ? (
         <Vazio titulo="Nenhum produto encontrado" descricao="Tente outro termo." />
       ) : (
-        <Tabela>
-          <Cabecalho>
-            <tr>
-              <Th>Produto</Th>
-              <Th numerico>Melhor preço hoje</Th>
-              <Th numerico className="w-40">
-                Preço deste fornecedor
-              </Th>
-            </tr>
-          </Cabecalho>
-          <Corpo>
+        <>
+          {/* Celular: um cartão por produto. Em tabela, o campo de preço ficaria
+              fora da tela — justamente o que se vem digitar aqui. */}
+          <ul className="divide-y divide-borda/60 sm:hidden">
             {visiveis.map((linha) => (
-              <Linha key={linha.produtoId}>
-                <Td>
-                  <span className="font-medium text-texto">{linha.nome}</span>
-                  <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-texto-fraco">
-                    <span>{linha.unidade}</span>
-                    {linha.categoria && <span>· {linha.categoria}</span>}
-                    {linha.atualizadoEm && (
-                      <span>· atualizado em {linha.atualizadoEm}</span>
-                    )}
-                  </span>
-                </Td>
-                <Td numerico>
-                  {linha.melhorPreco ? (
-                    <span className="flex items-center justify-end gap-2">
-                      <span className="text-texto-suave">{linha.melhorPreco}</span>
+              <li key={linha.produtoId} className="flex flex-col gap-2 p-3">
+                <div>
+                  <p className="font-medium text-texto">{linha.nome}</p>
+                  <p className="text-xs text-texto-fraco">
+                    {linha.unidade}
+                    {linha.categoria && ` · ${linha.categoria}`}
+                  </p>
+                </div>
+
+                <div className="flex items-end justify-between gap-3">
+                  <p className="text-xs text-texto-fraco">
+                    Melhor preço hoje
+                    <span className="mt-0.5 flex items-center gap-2 text-sm text-texto-suave">
+                      {linha.melhorPreco ?? "—"}
                       {linha.ehOMaisBarato && (
                         <Etiqueta tom="positivo">Você</Etiqueta>
                       )}
                     </span>
-                  ) : (
-                    <span className="text-texto-fraco">—</span>
-                  )}
-                </Td>
-                <Td numerico>
-                  <EntradaNumero
-                    name={`preco_${linha.produtoId}`}
-                    defaultValue={linha.preco}
-                    placeholder="—"
-                    aria-label={`Preço de ${linha.nome}`}
-                    className="text-right"
-                  />
-                  {estado.campos?.[`preco_${linha.produtoId}`] && (
-                    <span className="mt-1 block text-xs text-erro">
-                      {estado.campos[`preco_${linha.produtoId}`]}
-                    </span>
-                  )}
-                </Td>
-              </Linha>
+                  </p>
+
+                  <div className="w-32 shrink-0">
+                    <EntradaNumero
+                      name={`preco_${linha.produtoId}`}
+                      defaultValue={linha.preco}
+                      placeholder="—"
+                      aria-label={`Preço de ${linha.nome}`}
+                      className="text-right"
+                    />
+                  </div>
+                </div>
+
+                {estado.campos?.[`preco_${linha.produtoId}`] && (
+                  <p className="text-xs text-erro">
+                    {estado.campos[`preco_${linha.produtoId}`]}
+                  </p>
+                )}
+              </li>
             ))}
-          </Corpo>
-        </Tabela>
+          </ul>
+
+          <div className="hidden sm:block">
+            <Tabela className="min-w-0">
+              <Cabecalho>
+                <tr>
+                  <Th>Produto</Th>
+                  <Th numerico>Melhor preço hoje</Th>
+                  <Th numerico className="w-40">
+                    Preço deste fornecedor
+                  </Th>
+                </tr>
+              </Cabecalho>
+              <Corpo>
+                {visiveis.map((linha) => (
+                  <Linha key={linha.produtoId}>
+                    <Td>
+                      <span className="font-medium text-texto">{linha.nome}</span>
+                      <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-texto-fraco">
+                        <span>{linha.unidade}</span>
+                        {linha.categoria && <span>· {linha.categoria}</span>}
+                        {linha.atualizadoEm && (
+                          <span>· atualizado em {linha.atualizadoEm}</span>
+                        )}
+                      </span>
+                    </Td>
+                    <Td numerico>
+                      {linha.melhorPreco ? (
+                        <span className="flex items-center justify-end gap-2">
+                          <span className="text-texto-suave">
+                            {linha.melhorPreco}
+                          </span>
+                          {linha.ehOMaisBarato && (
+                            <Etiqueta tom="positivo">Você</Etiqueta>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-texto-fraco">—</span>
+                      )}
+                    </Td>
+                    <Td numerico>
+                      <EntradaNumero
+                        name={`preco_${linha.produtoId}`}
+                        defaultValue={linha.preco}
+                        placeholder="—"
+                        aria-label={`Preço de ${linha.nome}`}
+                        className="text-right"
+                      />
+                      {estado.campos?.[`preco_${linha.produtoId}`] && (
+                        <span className="mt-1 block text-xs text-erro">
+                          {estado.campos[`preco_${linha.produtoId}`]}
+                        </span>
+                      )}
+                    </Td>
+                  </Linha>
+                ))}
+              </Corpo>
+            </Tabela>
+          </div>
+        </>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-borda p-3">
