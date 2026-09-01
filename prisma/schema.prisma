@@ -1,0 +1,297 @@
+// Sistema de gestao da Lanius Custom
+// Documentacao do Prisma: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UnidadeMedida {
+  UN
+  L
+  ML
+  KG
+  G
+  M
+  M2
+  CX
+  PC
+}
+
+enum TipoMovimento {
+  ENTRADA
+  SAIDA_SERVICO
+  AJUSTE
+  ESTORNO_SERVICO
+}
+
+enum StatusServico {
+  ORCAMENTO
+  EM_ANDAMENTO
+  CONCLUIDO
+  CANCELADO
+}
+
+enum TipoRemuneracao {
+  SALARIO
+  DIARIA
+  COMISSAO
+}
+
+enum CategoriaGasto {
+  TERCEIRIZADO
+  COMBUSTIVEL
+  FERRAMENTA
+  ALIMENTACAO
+  TRANSPORTE
+  OUTRO
+}
+
+// ---------------------------------------------------------------------------
+// Acesso
+// ---------------------------------------------------------------------------
+
+model Usuario {
+  id        String   @id @default(cuid())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+  editadoEm DateTime @updatedAt
+
+  @@map("usuarios")
+}
+
+// ---------------------------------------------------------------------------
+// Estoque
+// ---------------------------------------------------------------------------
+
+model Produto {
+  id        String        @id @default(cuid())
+  codigo    String?       @unique
+  nome      String
+  descricao String?
+  categoria String?
+  unidade   UnidadeMedida @default(UN)
+
+  /// Quantidade em estoque, mantida na mesma transacao dos movimentos.
+  saldoAtual Decimal @default(0) @db.Decimal(14, 3)
+
+  /// Custo medio ponderado, recalculado a cada entrada.
+  custoMedio Decimal @default(0) @db.Decimal(14, 4)
+
+  estoqueMinimo Decimal  @default(0) @db.Decimal(14, 3)
+  ativo         Boolean  @default(true)
+  criadoEm      DateTime @default(now())
+  editadoEm     DateTime @updatedAt
+
+  movimentos       MovimentoEstoque[]
+  precosFornecedor PrecoFornecedor[]
+  itensCotacao     CotacaoItem[]
+
+  @@index([nome])
+  @@map("produtos")
+}
+
+model MovimentoEstoque {
+  id        String        @id @default(cuid())
+  produto   Produto       @relation(fields: [produtoId], references: [id], onDelete: Restrict)
+  produtoId String
+  tipo      TipoMovimento
+
+  /// Sempre positiva. O sinal e definido pelo campo `tipo`.
+  quantidade Decimal @db.Decimal(14, 3)
+
+  /// Custo unitario congelado no momento do movimento.
+  custoUnitario Decimal @db.Decimal(14, 4)
+
+  custoTotal   Decimal     @db.Decimal(14, 2)
+  fornecedor   Fornecedor? @relation(fields: [fornecedorId], references: [id], onDelete: SetNull)
+  fornecedorId String?
+  servico      Servico?    @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  servicoId    String?
+  documento    String?
+  observacao   String?
+  data         DateTime    @default(now())
+  criadoEm     DateTime    @default(now())
+
+  @@index([produtoId, data])
+  @@index([servicoId])
+  @@map("movimentos_estoque")
+}
+
+// ---------------------------------------------------------------------------
+// Fornecedores
+// ---------------------------------------------------------------------------
+
+model Fornecedor {
+  id         String   @id @default(cuid())
+  nome       String
+  telefone   String?
+  cidade     String?
+  observacao String?
+  ativo      Boolean  @default(true)
+  criadoEm   DateTime @default(now())
+  editadoEm  DateTime @updatedAt
+
+  precos     PrecoFornecedor[]
+  movimentos MovimentoEstoque[]
+
+  @@index([nome])
+  @@map("fornecedores")
+}
+
+model PrecoFornecedor {
+  id           String     @id @default(cuid())
+  fornecedor   Fornecedor @relation(fields: [fornecedorId], references: [id], onDelete: Cascade)
+  fornecedorId String
+  produto      Produto    @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  produtoId    String
+  preco        Decimal    @db.Decimal(14, 2)
+  atualizadoEm DateTime   @default(now()) @updatedAt
+
+  @@unique([fornecedorId, produtoId])
+  @@index([produtoId, preco])
+  @@map("precos_fornecedor")
+}
+
+// ---------------------------------------------------------------------------
+// Funcionarios
+// ---------------------------------------------------------------------------
+
+model Funcionario {
+  id                       String          @id @default(cuid())
+  nome                     String
+  funcao                   String?
+  telefone                 String?
+  salarioMensal            Decimal?        @db.Decimal(14, 2)
+  tipoPadrao               TipoRemuneracao @default(SALARIO)
+  valorDiariaPadrao        Decimal?        @db.Decimal(14, 2)
+  percentualComissaoPadrao Decimal?        @db.Decimal(6, 3)
+  ativo                    Boolean         @default(true)
+  criadoEm                 DateTime        @default(now())
+  editadoEm                DateTime        @updatedAt
+
+  alocacoes ServicoFuncionario[]
+
+  @@index([nome])
+  @@map("funcionarios")
+}
+
+// ---------------------------------------------------------------------------
+// Servicos
+// ---------------------------------------------------------------------------
+
+model Servico {
+  id            String        @id @default(cuid())
+  numero        Int           @unique @default(autoincrement())
+  cliente       String
+  telefone      String?
+  veiculo       String
+  placa         String?
+  descricao     String?
+  valorOrcado   Decimal       @default(0) @db.Decimal(14, 2)
+  status        StatusServico @default(EM_ANDAMENTO)
+  dataInicio    DateTime      @default(now())
+  dataConclusao DateTime?
+  observacao    String?
+  criadoEm      DateTime      @default(now())
+  editadoEm     DateTime      @updatedAt
+
+  movimentos MovimentoEstoque[]
+  gastos     GastoServico[]
+  equipe     ServicoFuncionario[]
+
+  @@index([status, dataInicio])
+  @@map("servicos")
+}
+
+model ServicoFuncionario {
+  id            String       @id @default(cuid())
+  servico       Servico      @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  servicoId     String
+  funcionario   Funcionario? @relation(fields: [funcionarioId], references: [id], onDelete: SetNull)
+  funcionarioId String?
+
+  /// Copia do nome no momento da alocacao, para o historico nao mudar.
+  nome String
+
+  tipoRemuneracao    TipoRemuneracao
+  salarioMensal      Decimal?        @db.Decimal(14, 2)
+  valorDiaria        Decimal?        @db.Decimal(14, 2)
+  percentualComissao Decimal?        @db.Decimal(6, 3)
+  criadoEm           DateTime        @default(now())
+
+  dias DiaTrabalhado[]
+
+  @@unique([servicoId, funcionarioId])
+  @@map("servico_funcionarios")
+}
+
+model DiaTrabalhado {
+  id                   String             @id @default(cuid())
+  servicoFuncionario   ServicoFuncionario @relation(fields: [servicoFuncionarioId], references: [id], onDelete: Cascade)
+  servicoFuncionarioId String
+
+  /// Data do dia trabalhado, normalizada em UTC (sem hora).
+  data DateTime @db.Date
+
+  observacao String?
+  criadoEm   DateTime @default(now())
+
+  @@unique([servicoFuncionarioId, data])
+  @@map("dias_trabalhados")
+}
+
+model GastoServico {
+  id        String         @id @default(cuid())
+  servico   Servico        @relation(fields: [servicoId], references: [id], onDelete: Cascade)
+  servicoId String
+  descricao String
+  categoria CategoriaGasto @default(OUTRO)
+  valor     Decimal        @db.Decimal(14, 2)
+  data      DateTime       @default(now())
+  criadoEm  DateTime       @default(now())
+
+  @@index([servicoId])
+  @@map("gastos_servico")
+}
+
+// ---------------------------------------------------------------------------
+// Cotacoes
+// ---------------------------------------------------------------------------
+
+model Cotacao {
+  id         String   @id @default(cuid())
+  numero     Int      @unique @default(autoincrement())
+  titulo     String?
+  observacao String?
+  criadoEm   DateTime @default(now())
+  editadoEm  DateTime @updatedAt
+
+  itens CotacaoItem[]
+
+  @@map("cotacoes")
+}
+
+model CotacaoItem {
+  id         String  @id @default(cuid())
+  cotacao    Cotacao @relation(fields: [cotacaoId], references: [id], onDelete: Cascade)
+  cotacaoId  String
+  produto    Produto @relation(fields: [produtoId], references: [id], onDelete: Restrict)
+  produtoId  String
+  quantidade Decimal @db.Decimal(14, 3)
+  observacao String?
+
+  @@unique([cotacaoId, produtoId])
+  @@map("cotacao_itens")
+}
