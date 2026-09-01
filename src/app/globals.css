@@ -108,12 +108,23 @@
     display: block !important;
   }
 
+  /* O conteudo da pagina ocupa a folha inteira: sem barra lateral, sem o
+     espaco reservado para a navegacao do celular. */
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
   .area-impressao {
     position: static !important;
     margin: 0 !important;
     padding: 0 !important;
     max-width: none !important;
     width: 100% !important;
+    background: #fff !important;
+    border: 0 !important;
+    border-radius: 0 !important;
   }
 
   .area-impressao * {
