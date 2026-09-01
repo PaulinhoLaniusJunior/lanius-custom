@@ -53,6 +53,48 @@ O sistema fica em <http://localhost:3000>.
 
 Para acessar do celular na mesma rede, use o IP do computador (`http://192.168.x.x:3000`).
 
+## Como publicar
+
+O sistema foi feito para rodar na **Vercel** com um PostgreSQL gerenciado.
+
+### 1. Criar o banco
+
+Crie um projeto no [Neon](https://neon.tech) (plano gratuito) ou um Vercel Postgres pelo painel
+da Vercel. Copie a string de conexão — algo como
+`postgresql://usuario:senha@ep-xxx.aws.neon.tech/lanius?sslmode=require`.
+
+### 2. Publicar na Vercel
+
+Importe o repositório em [vercel.com/new](https://vercel.com/new) e configure duas variáveis de
+ambiente:
+
+| Variável | Valor |
+| --- | --- |
+| `DATABASE_URL` | A string de conexão do passo 1 |
+| `SESSION_SECRET` | Uma chave nova, gerada com `openssl rand -base64 32` |
+
+O comando de build já roda o `prisma generate`, então não é preciso configurar mais nada.
+
+### 3. Preparar o banco de produção
+
+Com a `DATABASE_URL` de produção no `.env` local:
+
+```bash
+npm run db:deploy
+```
+
+```bash
+npm run usuario:criar
+```
+
+Depois disso, devolva o `.env` para o banco de desenvolvimento — assim você não mexe no banco
+real sem querer enquanto trabalha no código.
+
+### 4. Usar no celular
+
+Abra a URL da Vercel no navegador do celular e use **"Adicionar à tela de início"**. O sistema
+abre em tela cheia, com o ícone da Lanius, como um aplicativo.
+
 ## Comandos
 
 | Comando | O que faz |
