@@ -70,8 +70,12 @@ ambiente:
 
 | Variável | Valor |
 | --- | --- |
-| `DATABASE_URL` | A string de conexão do passo 1 |
+| `DATABASE_URL` | A string de conexão do passo 1, com `sslmode=verify-full` |
 | `SESSION_SECRET` | Uma chave nova, gerada com `openssl rand -base64 32` |
+
+> Use `sslmode=verify-full` em vez do `sslmode=require` que o Neon entrega por padrão. Hoje o
+> driver trata os dois igual, mas na próxima versão principal o `require` passa a aceitar
+> certificado não verificado — deixar explícito trava a verificação completa desde já.
 
 O comando de build já roda o `prisma generate`, então não é preciso configurar mais nada.
 
