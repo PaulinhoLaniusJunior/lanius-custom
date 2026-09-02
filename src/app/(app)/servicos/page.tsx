@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 
 import { BotaoLink } from "@/components/ui/botao";
 import {
@@ -61,10 +61,16 @@ export default async function ListaServicos(props: PageProps<"/servicos">) {
         titulo="Serviços"
         descricao="O que entrou na oficina e quanto cada um está custando."
         acao={
-          <BotaoLink href="/servicos/novo">
-            <Plus className="size-4" aria-hidden />
-            Serviço
-          </BotaoLink>
+          <div className="flex gap-2">
+            <BotaoLink href="/servicos/importar" variante="secundario">
+              <Upload className="size-4" aria-hidden />
+              Importar planilha
+            </BotaoLink>
+            <BotaoLink href="/servicos/novo">
+              <Plus className="size-4" aria-hidden />
+              Serviço
+            </BotaoLink>
+          </div>
         }
       />
 

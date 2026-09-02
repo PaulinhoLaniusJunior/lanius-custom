@@ -10,6 +10,8 @@ import {
   aplicarEntrada,
   aplicarSaida,
 } from "@/lib/domain/estoque";
+import { MARCA_IMPORTACAO } from "@/lib/domain/importacao";
+import { expandirPeriodo } from "@/lib/domain/mao-de-obra";
 import { prisma } from "@/lib/prisma";
 import {
   dataObrigatoria,
@@ -230,6 +232,12 @@ export async function estornarProdutoDoServico(formData: FormData) {
       include: { produto: { select: { saldoAtual: true, custoMedio: true } } },
     });
     if (!movimento || movimento.tipo !== "SAIDA_SERVICO") return;
+
+    // Lançamento importado de planilha entrou e saiu na mesma operação, sem
+    // mexer no saldo. Devolvê-lo ao estoque criaria mercadoria que nunca
+    // existiu na prateleira. A tela não oferece o botão nestes casos; esta
+    // guarda cobre o POST direto, que não passa pela tela.
+    if (movimento.documento === MARCA_IMPORTACAO) return;
 
     const posicao = aplicarEntrada({
       saldoAtual: movimento.produto.saldoAtual,
@@ -455,12 +463,7 @@ export async function lancarDias(
     return { erro: "O período não pode passar de 120 dias." };
   }
 
-  const dias: Date[] = [];
-  for (let data = de; data <= fim; data = new Date(data.getTime() + umDia)) {
-    const diaSemana = data.getUTCDay();
-    if (!incluirFimDeSemana && (diaSemana === 0 || diaSemana === 6)) continue;
-    dias.push(new Date(data));
-  }
+  const dias = expandirPeriodo(de, fim, incluirFimDeSemana);
 
   if (dias.length === 0) {
     return { erro: "Nenhum dia útil no período escolhido." };

@@ -30,6 +30,7 @@ import {
   removerDia,
   removerGasto,
 } from "@/lib/actions/servicos";
+import { MARCA_IMPORTACAO } from "@/lib/domain/importacao";
 import { custoDaAlocacao, explicarCalculo } from "@/lib/domain/mao-de-obra";
 import { diasCorridos } from "@/lib/domain/servico";
 import {
@@ -433,22 +434,34 @@ export default async function DetalheServico(props: PageProps<"/servicos/[id]">)
                       </Td>
                       <Td numerico>{formatarMoeda(movimento.custoTotal)}</Td>
                       <Td className="w-10">
-                        <form action={estornarProdutoDoServico}>
-                          <input
-                            type="hidden"
-                            name="movimentoId"
-                            value={movimento.id}
-                          />
-                          <input type="hidden" name="servicoId" value={servico.id} />
-                          <button
-                            type="submit"
-                            aria-label={`Devolver ${movimento.produto.nome} ao estoque`}
-                            title="Devolver ao estoque"
-                            className="rounded p-1.5 text-texto-fraco hover:bg-erro/10 hover:text-erro"
+                        {movimento.documento === MARCA_IMPORTACAO ? (
+                          // Importado: entrou e saiu na mesma operação, sem
+                          // passar pela prateleira. Devolver criaria estoque
+                          // que nunca existiu.
+                          <span
+                            title="Veio de planilha. Para corrigir, use o ajuste de inventário na tela do produto."
+                            className="cursor-help text-xs text-texto-fraco"
                           >
-                            <X className="size-4" aria-hidden />
-                          </button>
-                        </form>
+                            importado
+                          </span>
+                        ) : (
+                          <form action={estornarProdutoDoServico}>
+                            <input
+                              type="hidden"
+                              name="movimentoId"
+                              value={movimento.id}
+                            />
+                            <input type="hidden" name="servicoId" value={servico.id} />
+                            <button
+                              type="submit"
+                              aria-label={`Devolver ${movimento.produto.nome} ao estoque`}
+                              title="Devolver ao estoque"
+                              className="rounded p-1.5 text-texto-fraco hover:bg-erro/10 hover:text-erro"
+                            >
+                              <X className="size-4" aria-hidden />
+                            </button>
+                          </form>
+                        )}
                       </Td>
                     </Linha>
                   ))}
