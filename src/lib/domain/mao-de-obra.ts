@@ -35,6 +35,36 @@ export function diasUteisDoMes(data: Date): number {
   return uteis;
 }
 
+/** Um dia em milissegundos, usado para caminhar por um período. */
+const UM_DIA = 24 * 60 * 60 * 1000;
+
+/**
+ * Lista os dias de um período, pulando sábados e domingos por padrão.
+ *
+ * Um serviço costuma ocupar a pessoa por vários dias seguidos, então tanto o
+ * lançamento pela tela quanto a importação por planilha informam um intervalo
+ * em vez de marcar dia a dia.
+ */
+export function expandirPeriodo(
+  de: Date,
+  ate: Date = de,
+  incluirFimDeSemana = false,
+): Date[] {
+  if (ate < de) return [];
+
+  const dias: Date[] = [];
+  for (
+    let data = new Date(de.getTime());
+    data <= ate;
+    data = new Date(data.getTime() + UM_DIA)
+  ) {
+    const diaSemana = data.getUTCDay();
+    if (!incluirFimDeSemana && (diaSemana === 0 || diaSemana === 6)) continue;
+    dias.push(new Date(data));
+  }
+  return dias;
+}
+
 /** Valor de um dia de trabalho para um mensalista, no mes da data informada. */
 export function valorDoDiaPorSalario(
   salarioMensal: ValorDecimal,

@@ -14,6 +14,7 @@ Funciona no computador da oficina e no celular, com a mesma interface.
 | **Mão de obra** | Funcionários mensalistas: o custo do dia sai do salário dividido pelos dias úteis do mês. Também aceita diária e comissão. |
 | **Fornecedores** | Cadastro simples (nome, telefone, cidade) e a tabela de preços atuais de cada produto. |
 | **Cotações** | Relatório para enviar ao fornecedor (sem preços) e comparativo dos **melhores preços** já cadastrados, imprimível agrupado por fornecedor. |
+| **Importação** | Traz um serviço anotado fora do sistema por planilha `.xlsx`, com os produtos já usados. Confere tudo antes de gravar e aponta os erros linha a linha. |
 
 ## Tecnologias
 
@@ -140,6 +141,13 @@ testes. As telas e as Server Actions apenas leem e gravam.
 - **Dias úteis não descontam feriados.** A oficina trabalha em muitos deles e não há
   calendário municipal cadastrado. Se isso passar a importar, o ajuste é em
   `src/lib/domain/mao-de-obra.ts`.
+- **A importação de planilha é neutra no estoque.** Os produtos da planilha já foram comprados
+  e consumidos, então entrada e saída são lançadas juntas: o histórico registra as duas, mas o
+  saldo e o custo médio de hoje não mudam, e o serviço recebe exatamente o preço da planilha.
+  Encadear as funções normais de entrada e saída daria outro número — o porquê está em
+  `src/lib/domain/importacao.ts`.
+- **Lançamento importado não pode ser estornado.** Devolvê-lo ao estoque criaria mercadoria que
+  nunca esteve na prateleira. Para corrigir, use o ajuste de inventário na tela do produto.
 
 ## Licença
 

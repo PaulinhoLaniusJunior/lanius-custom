@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    serverActions: {
+      // O padrão de 1 MB é apertado para o envio da planilha de importação.
+      bodySizeLimit: "4mb",
+    },
+  },
 };
 
 export default nextConfig;
